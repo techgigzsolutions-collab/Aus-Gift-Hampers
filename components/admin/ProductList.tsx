@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Image from 'next/image'
 import type { Product } from '@/types/product'
+import { formatCurrency } from '@/lib/currency'
 import { productSku, productStock } from '@/lib/productIdentity'
 
 interface ProductListProps {
@@ -10,11 +11,12 @@ interface ProductListProps {
   onEdit: (product: Product) => void
   onDelete: (id: string) => void
   onStockUpdate: (id: string, stock: number) => void
+  onFeaturedUpdate: (id: string, featured: boolean) => void
 }
 
-const money = (value: number) => `₹${Number(value).toLocaleString('en-IN')}`
+const money = formatCurrency
 
-export function ProductList({ products, onEdit, onDelete, onStockUpdate }: ProductListProps) {
+export function ProductList({ products, onEdit, onDelete, onStockUpdate, onFeaturedUpdate }: ProductListProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
   const [savingStockId, setSavingStockId] = useState<string | null>(null)
@@ -78,7 +80,7 @@ export function ProductList({ products, onEdit, onDelete, onStockUpdate }: Produ
             <table className="w-full min-w-[1040px]">
               <thead className="bg-secondary border-b border-border">
                 <tr>
-                  {['Image', 'SKU', 'Name', 'Category', 'Price', 'Stock', 'Enquired', 'Actions'].map(label => (
+                  {['Image', 'SKU', 'Name', 'Category', 'Price', 'Stock', 'Featured', 'Enquired', 'Actions'].map(label => (
                     <th key={label} className="px-6 py-3 text-left text-sm font-semibold text-foreground">
                       {label}
                     </th>
@@ -133,6 +135,22 @@ export function ProductList({ products, onEdit, onDelete, onStockUpdate }: Produ
                       {savingStockId === product.id && (
                         <p className="text-xs text-muted-foreground mt-1">Saving...</p>
                       )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <button
+                        type="button"
+                        onClick={() => onFeaturedUpdate(product.id, !product.featured)}
+                        className={`relative h-7 w-12 rounded-full transition-colors ${
+                          product.featured ? 'bg-accent' : 'bg-neutral-300'
+                        }`}
+                        aria-label={product.featured ? 'Unmark featured' : 'Mark featured'}
+                      >
+                        <span
+                          className={`absolute left-0 top-1 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                            product.featured ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
                     </td>
                     <td className="px-6 py-4">
                       <p className="font-medium text-foreground">{product.enquired_stock || 0}</p>

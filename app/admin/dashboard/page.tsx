@@ -62,6 +62,15 @@ export default function DashboardPage() {
     }
   }
 
+  const handleFeaturedUpdate = async (id: string, featured: boolean) => {
+    try {
+      await productService.updateProduct(id, { featured })
+      await fetchProducts()
+    } catch (err: any) {
+      setError(err.message || 'Unable to update featured status')
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -105,6 +114,7 @@ export default function DashboardPage() {
           }}
           onDelete={handleDeleteProduct}
           onStockUpdate={handleStockUpdate}
+          onFeaturedUpdate={handleFeaturedUpdate}
         />
 
         {isFormOpen && <ProductForm product={selectedProduct} onClose={handleFormClose} />}

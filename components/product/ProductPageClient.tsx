@@ -77,6 +77,25 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
           },
         }
       )
+
+      if (pageRef.current?.querySelector('[data-related-grid]')) {
+        gsap.fromTo(
+          '[data-related-card]',
+          { autoAlpha: 0, x: 42 },
+          {
+            autoAlpha: 1,
+            x: 0,
+            duration: 0.75,
+            stagger: 0.08,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: '[data-related-grid]',
+              start: 'top 82%',
+              once: true,
+            },
+          }
+        )
+      }
     }, pageRef)
 
     return () => ctx.revert()
@@ -344,7 +363,7 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
           <section data-product-section className="mt-16 border-t border-border pt-10">
             <div className="flex items-end justify-between gap-4">
               <div>
-                <h2 className="text-xl sm:text-2xl font-semibold">Related Products</h2>
+                <h2 className="text-xl sm:text-2xl font-semibold">You May Also Like</h2>
                 {product.category && <p className="mt-2 text-sm text-muted-foreground">More from {product.category}</p>}
               </div>
               <Link href="/shop" className="text-sm font-medium text-accent hover:opacity-80 transition-opacity">
@@ -352,10 +371,11 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
               </Link>
             </div>
 
-            <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
+            <div data-related-grid className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-4">
               {related.map(item => (
                 <article
                   key={productSku(item)}
+                  data-related-card
                   className="cursor-pointer overflow-hidden rounded-2xl border border-border bg-white transition-shadow hover:shadow-md"
                   onClick={() => router.push(`/product/${productSku(item)}`)}
                 >

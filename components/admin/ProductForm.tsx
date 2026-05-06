@@ -24,6 +24,7 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
     reviews_count: product?.reviews_count?.toString() || '0',
     estimated_delivery: product?.estimated_delivery || '5-7 business days',
     free_shipping: product?.free_shipping ?? true,
+    featured: product?.featured ?? false,
   })
   const [subImages, setSubImages] = useState<string[]>(product?.sub_images || [])
   const [mainFile, setMainFile] = useState<File | null>(null)
@@ -64,6 +65,7 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
         rating: formData.rating ? Number(formData.rating) : null,
         reviews_count: Number(formData.reviews_count || 0),
         free_shipping: Boolean(formData.free_shipping),
+        featured: Boolean(formData.featured),
         estimated_delivery: formData.estimated_delivery || '5-7 business days',
       }
 
@@ -188,8 +190,8 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
             {[
               ['name', 'Product Name', 'Premium Wellness Hamper'],
               ['category', 'Category', 'Wellness'],
-              ['price', 'Price (₹)', '5000'],
-              ['discounted_price', 'Discounted Price (₹)', '4500'],
+              ['price', 'Price (AUD)', '5000'],
+              ['discounted_price', 'Discounted Price (AUD)', '4500'],
               ['stock', 'Stock', '10'],
               ['rating', 'Rating', '4.8'],
               ['reviews_count', 'Reviews Count', '24'],
@@ -232,6 +234,17 @@ export function ProductForm({ product, onClose }: ProductFormProps) {
               className="w-5 h-5 accent-[hsl(var(--accent))]"
             />
             <span className="text-sm font-medium text-foreground">Free Shipping</span>
+          </label>
+
+          <label className="flex items-center gap-3">
+            <input
+              type="checkbox"
+              name="featured"
+              checked={formData.featured}
+              onChange={handleChange}
+              className="w-5 h-5 accent-[hsl(var(--accent))]"
+            />
+            <span className="text-sm font-medium text-foreground">Featured Signature Collection</span>
           </label>
 
           <div className="flex gap-4 pt-4 border-t border-border">

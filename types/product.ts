@@ -14,6 +14,7 @@ export interface Product {
   rating: number | null
   reviews_count: number
   free_shipping: boolean
+  featured: boolean
   estimated_delivery: string
   created_at?: string
   updated_at?: string | null

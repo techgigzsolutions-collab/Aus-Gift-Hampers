@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Product } from '@/lib/products'
 import { QuantityControl } from './QuantityControl'
 import Image from 'next/image'
+import { formatCurrency } from '@/lib/currency'
 
 interface ProductCardProps {
   product: Product
@@ -102,7 +103,7 @@ export function ProductCard({
         {/* Price */}
         <div className="mb-6 pb-6 border-b border-border">
           <p className="text-3xl font-bold text-accent">
-            ₹{product.price.toLocaleString('en-IN')}
+            {formatCurrency(product.price)}
           </p>
           <p className="text-xs text-neutral-500 mt-2">Premium Luxury Collection</p>
         </div>

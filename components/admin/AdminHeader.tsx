@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { LogOut, ShieldCheck } from 'lucide-react'
+import { ExternalLink, LogOut, ShieldCheck } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import Image from 'next/image'
 
@@ -56,6 +56,16 @@ export function AdminHeader({ user }: AdminHeaderProps) {
             </div>
 
             {/* LOGOUT */}
+            <Link
+              href="/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-2xl border border-[#d7b873] bg-white/80 px-4 py-3 text-sm font-semibold text-[#9a6d2c] transition-all duration-200 hover:bg-[#fff8ec] hover:scale-[1.03]"
+            >
+              <ExternalLink className="h-4 w-4" strokeWidth={1.8} />
+              View Store
+            </Link>
+
             <button
               onClick={handleLogout}
               className="inline-flex items-center gap-2 rounded-2xl border border-[#f2d9d5] bg-[#fff5f3] px-4 py-3 text-sm font-semibold text-[#b14e40] transition-all duration-200 hover:bg-[#fdeae6] hover:scale-[1.03]"

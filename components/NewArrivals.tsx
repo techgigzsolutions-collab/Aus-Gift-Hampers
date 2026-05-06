@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import { products } from '@/lib/products'
+import { formatCurrency } from '@/lib/currency'
 
 export function NewArrivals() {
   // Get all products for new arrivals
@@ -64,7 +65,7 @@ export function NewArrivals() {
                 </p>
                 <div className="flex justify-between items-end">
                   <span className="font-bold text-lg text-foreground">
-                    ₹{product.price.toLocaleString('en-IN')}
+                    {formatCurrency(product.price)}
                   </span>
                   <button className="px-3 py-2 bg-accent hover:bg-accent-dark text-white text-sm font-semibold rounded-lg transition-colors">
                     Add to Cart

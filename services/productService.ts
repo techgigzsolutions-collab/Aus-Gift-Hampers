@@ -1,6 +1,33 @@
 import { createClient } from '@/utils/supabase/client'
 import type { Product, ProductPayload } from '@/types/product'
 
+const PRODUCTS_BUCKET = 'products'
+
+function getStoragePath(url: string | null | undefined) {
+  if (!url) return null
+
+  try {
+    const parsed = new URL(url)
+    const marker = `/storage/v1/object/public/${PRODUCTS_BUCKET}/`
+    const markerIndex = parsed.pathname.indexOf(marker)
+    if (markerIndex === -1) return null
+
+    return decodeURIComponent(parsed.pathname.slice(markerIndex + marker.length))
+  } catch {
+    return url.startsWith('/') || !url.includes('/') ? null : url
+  }
+}
+
+function uniqueStoragePaths(product: Pick<Product, 'main_image' | 'sub_images'>) {
+  return Array.from(
+    new Set(
+      [product.main_image, ...(product.sub_images || [])]
+        .map(getStoragePath)
+        .filter((path): path is string => Boolean(path))
+    )
+  )
+}
+
 export const productService = {
   async getProducts(): Promise<Product[]> {
     const supabase = createClient()
@@ -65,6 +92,27 @@ export const productService = {
 
   async deleteProduct(id: string) {
     const supabase = createClient()
+    const { data: product, error: fetchError } = await supabase
+      .from('products')
+      .select('main_image, sub_images')
+      .eq('id', id)
+      .single()
+
+    if (fetchError) {
+      throw fetchError
+    }
+
+    const paths = uniqueStoragePaths(product as Pick<Product, 'main_image' | 'sub_images'>)
+    if (paths.length > 0) {
+      const { error: storageError } = await supabase.storage
+        .from(PRODUCTS_BUCKET)
+        .remove(paths)
+
+      if (storageError) {
+        throw storageError
+      }
+    }
+
     const { error } = await supabase
       .from('products')
       .delete()
@@ -91,7 +139,7 @@ export const productService = {
     const fileName = `${folder}/${crypto.randomUUID()}-${safeName}`
 
     const { error: uploadError } = await supabase.storage
-      .from('products')
+      .from(PRODUCTS_BUCKET)
       .upload(fileName, file)
 
     if (uploadError) {
@@ -99,7 +147,7 @@ export const productService = {
     }
 
     const { data: publicData } = supabase.storage
-      .from('products')
+      .from(PRODUCTS_BUCKET)
       .getPublicUrl(fileName)
 
     return publicData.publicUrl

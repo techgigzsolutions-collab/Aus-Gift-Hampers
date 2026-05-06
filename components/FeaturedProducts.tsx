@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import type { Product } from '@/types/product'
 import { Heart, ShoppingBag } from 'lucide-react'
 import { useCommerce } from '@/components/commerce/CommerceProvider'
+import { formatCurrency } from '@/lib/currency'
 import { isLowStock, productSku, productStock } from '@/lib/productIdentity'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
@@ -17,7 +18,7 @@ interface FeaturedProductsProps {
   onProductClick?: (product: Product) => void
 }
 
-const money = (value: number) => `₹${Number(value).toLocaleString('en-IN')}`
+const money = formatCurrency
 
 export function FeaturedProducts({ products, onProductClick }: FeaturedProductsProps) {
   const commerce = useCommerce()
@@ -57,7 +58,7 @@ export function FeaturedProducts({ products, onProductClick }: FeaturedProductsP
         <div data-motion-child className="text-center mb-16">
           <span className="text-accent font-semibold text-sm uppercase tracking-wider">Featured</span>
           <h2 className="font-serif text-4xl sm:text-5xl font-bold text-foreground mb-4 mt-2">
-            Signature Collections
+            Featured Signature Collections
           </h2>
           <p className="text-neutral-600 text-lg max-w-2xl mx-auto">
             Handpicked selections from our premium range

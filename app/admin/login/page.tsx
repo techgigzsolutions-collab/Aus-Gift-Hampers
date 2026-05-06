@@ -2,6 +2,8 @@
 
 import { Suspense } from 'react'
 import { useState } from 'react'
+import Image from 'next/image'
+import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/utils/supabase/client'
 
@@ -32,8 +34,26 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(205,151,75,0.16),transparent_34%),#fbfaf8] flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(205,151,75,0.16),transparent_34%),#fbfaf8]">
+      <header className="fixed left-0 top-0 z-50 w-full border-b border-white/60 bg-white/82 shadow-sm backdrop-blur-xl">
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 lg:px-12">
+          <Link href="/" className="flex items-center" aria-label="Aus Gift Hampers home">
+            <Image src="/logo-B.png" alt="Aus Gift Hampers" width={160} height={58} priority className="h-16 w-auto object-contain" />
+          </Link>
+          <nav className="hidden items-center gap-6 text-sm font-medium text-[#4f4538] sm:flex">
+            <Link href="/shop" className="transition-colors hover:text-accent">Shop</Link>
+            <Link href="/contact-us" className="transition-colors hover:text-accent">Contact</Link>
+          </nav>
+          <Link
+            href="/"
+            className="rounded-xl border border-accent px-4 py-2.5 text-sm font-semibold text-accent transition-colors hover:bg-accent hover:text-white"
+          >
+            Open Store
+          </Link>
+        </div>
+      </header>
+      <div className="flex min-h-screen items-center justify-center px-4 pt-24">
+        <div className="w-full max-w-md">
         <div className="bg-white/90 backdrop-blur rounded-xl shadow-xl border border-white p-8">
           <div className="text-center mb-8">
             <div className="w-12 h-12 bg-accent rounded-full mx-auto mb-4 flex items-center justify-center">
@@ -81,6 +101,7 @@ function LoginForm() {
             </button>
           </form>
         </div>
+      </div>
       </div>
     </div>
   )

@@ -21,6 +21,7 @@ import {
   ZoomIn,
 } from 'lucide-react'
 import type { Product } from '@/types/product'
+import { formatCurrency } from '@/lib/currency'
 import { productService } from '@/services/productService'
 import { isLowStock, productSku, productStock } from '@/lib/productIdentity'
 import { getWhatsAppHref } from '@/lib/whatsapp'
@@ -36,7 +37,7 @@ interface ProductModalProps {
   isInCart?: boolean
 }
 
-const money = (value: number) => `₹${Number(value).toLocaleString('en-IN')}`
+const money = formatCurrency
 const displayPrice = (product: Product) => product.discounted_price || product.price
 
 const trustPillars = [

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { Minus, Plus, ShoppingBag, X } from 'lucide-react'
 import type { CartItem, Product } from '@/types/product'
+import { formatCurrency } from '@/lib/currency'
 import { productSku, productStock } from '@/lib/productIdentity'
 
 const CART_KEY = 'agh_cart'
@@ -96,7 +97,7 @@ export function productPrice(product: Product) {
 }
 
 export function money(value: number) {
-  return `₹${Number(value).toLocaleString('en-IN')}`
+  return formatCurrency(value)
 }
 
 export function CommerceProvider({ children }: { children: React.ReactNode }) {

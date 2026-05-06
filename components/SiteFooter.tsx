@@ -46,11 +46,11 @@ export function SiteFooter() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12 mb-16">
           <div data-motion-child>
             <Image
-              src="/logo.png"
+              src="/logo-W.png"
               alt="Aus Gift Hampers"
-              width={120}
-              height={40}
-              className="mb-6 h-10 w-auto object-contain opacity-90"
+              width={170}
+              height={62}
+              className="mb-6 h-14 w-auto object-contain"
             />
             <p className="text-white/70 text-sm font-light leading-relaxed mb-6">
               Premium gift hampers handcrafted with elegance and care for every special occasion.

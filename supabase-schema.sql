@@ -14,10 +14,14 @@ create table if not exists public.products (
   rating numeric default 5 check (rating is null or (rating >= 0 and rating <= 5)),
   reviews_count integer not null default 0 check (reviews_count >= 0),
   free_shipping boolean not null default false,
+  featured boolean not null default false,
   estimated_delivery text not null default '5-7 business days',
   created_at timestamptz not null default now(),
   updated_at timestamptz
 );
+
+alter table public.products
+add column if not exists featured boolean not null default false;
 
 create or replace function public.set_updated_at()
 returns trigger

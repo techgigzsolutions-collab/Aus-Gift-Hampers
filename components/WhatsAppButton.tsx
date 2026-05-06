@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { CartItem, generateWhatsAppMessage, getWhatsAppLink } from '@/lib/whatsapp'
+import { formatCurrency } from '@/lib/currency'
 
 interface WhatsAppButtonProps {
   cartItems: CartItem[]
@@ -20,11 +21,11 @@ export function WhatsAppButton({ cartItems }: WhatsAppButtonProps) {
       <div className="fixed bottom-6 right-6 z-40">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="w-14 h-14 rounded-full bg-accent hover:bg-accent-dark text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group"
+          className="whatsapp-float flex h-[60px] w-[60px] items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_16px_38px_rgba(37,211,102,0.38)] transition-all duration-300 hover:scale-110 active:scale-95"
           aria-label="Contact us on WhatsApp"
         >
-          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.67-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.076 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421-7.403h-.004a9.87 9.87 0 00-4.781 1.158l-.34-.181-3.52.352 2.381-2.618A9.987 9.987 0 012.5 12.01C2.5 6.485 7.081 2 12.5 2s10 4.485 10 10-4.581 10-10 10c-1.629 0-3.168-.333-4.581-.94l-.356-.187-3.75.736 2.467-3.022z" />
+          <svg className="h-8 w-8" fill="currentColor" viewBox="0 0 32 32" aria-hidden="true">
+            <path d="M16.02 3.2C9.01 3.2 3.31 8.82 3.31 15.73c0 2.2.59 4.36 1.7 6.24L3.2 28.8l7.03-1.79a12.86 12.86 0 0 0 5.79 1.42c7.01 0 12.71-5.62 12.71-12.53S23.03 3.2 16.02 3.2Zm0 22.99c-1.83 0-3.62-.49-5.18-1.42l-.37-.22-4.17 1.06 1.11-4.04-.24-.39a10.2 10.2 0 0 1-1.6-5.45c0-5.68 4.69-10.29 10.45-10.29s10.45 4.61 10.45 10.29-4.69 10.46-10.45 10.46Zm5.73-7.7c-.31-.16-1.86-.91-2.15-1.01-.29-.11-.5-.16-.71.16-.21.31-.82 1.01-1 1.21-.18.21-.37.23-.68.08-.31-.16-1.32-.48-2.52-1.54-.93-.82-1.56-1.84-1.74-2.15-.18-.31-.02-.48.14-.64.14-.14.31-.37.47-.55.16-.18.21-.31.31-.52.11-.21.05-.39-.03-.55-.08-.16-.71-1.69-.97-2.31-.26-.6-.52-.52-.71-.53h-.61c-.21 0-.55.08-.84.39-.29.31-1.1 1.06-1.1 2.59 0 1.53 1.13 3.01 1.29 3.22.16.21 2.23 3.36 5.39 4.71.75.32 1.34.51 1.8.65.76.24 1.44.21 1.98.13.61-.09 1.86-.75 2.12-1.48.26-.73.26-1.35.18-1.48-.08-.13-.29-.21-.61-.37Z" />
           </svg>
         </button>
 
@@ -51,11 +52,11 @@ export function WhatsAppButton({ cartItems }: WhatsAppButtonProps) {
         href={whatsappLink}
         target="_blank"
         rel="noopener noreferrer"
-        className="block w-14 h-14 rounded-full bg-accent hover:bg-accent-dark text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center relative"
-        aria-label={`Order on WhatsApp - ₹${totalAmount.toLocaleString('en-IN')}`}
+        className="whatsapp-float relative flex h-[60px] w-[60px] items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_16px_38px_rgba(37,211,102,0.38)] transition-all duration-300 hover:scale-110 active:scale-95"
+        aria-label={`Order on WhatsApp - ${formatCurrency(totalAmount)}`}
       >
-        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.67-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.076 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421-7.403h-.004a9.87 9.87 0 00-4.781 1.158l-.34-.181-3.52.352 2.381-2.618A9.987 9.987 0 012.5 12.01C2.5 6.485 7.081 2 12.5 2s10 4.485 10 10-4.581 10-10 10c-1.629 0-3.168-.333-4.581-.94l-.356-.187-3.75.736 2.467-3.022z" />
+        <svg className="h-8 w-8" fill="currentColor" viewBox="0 0 32 32" aria-hidden="true">
+          <path d="M16.02 3.2C9.01 3.2 3.31 8.82 3.31 15.73c0 2.2.59 4.36 1.7 6.24L3.2 28.8l7.03-1.79a12.86 12.86 0 0 0 5.79 1.42c7.01 0 12.71-5.62 12.71-12.53S23.03 3.2 16.02 3.2Zm0 22.99c-1.83 0-3.62-.49-5.18-1.42l-.37-.22-4.17 1.06 1.11-4.04-.24-.39a10.2 10.2 0 0 1-1.6-5.45c0-5.68 4.69-10.29 10.45-10.29s10.45 4.61 10.45 10.29-4.69 10.46-10.45 10.46Zm5.73-7.7c-.31-.16-1.86-.91-2.15-1.01-.29-.11-.5-.16-.71.16-.21.31-.82 1.01-1 1.21-.18.21-.37.23-.68.08-.31-.16-1.32-.48-2.52-1.54-.93-.82-1.56-1.84-1.74-2.15-.18-.31-.02-.48.14-.64.14-.14.31-.37.47-.55.16-.18.21-.31.31-.52.11-.21.05-.39-.03-.55-.08-.16-.71-1.69-.97-2.31-.26-.6-.52-.52-.71-.53h-.61c-.21 0-.55.08-.84.39-.29.31-1.1 1.06-1.1 2.59 0 1.53 1.13 3.01 1.29 3.22.16.21 2.23 3.36 5.39 4.71.75.32 1.34.51 1.8.65.76.24 1.44.21 1.98.13.61-.09 1.86-.75 2.12-1.48.26-.73.26-1.35.18-1.48-.08-.13-.29-.21-.61-.37Z" />
         </svg>
 
         {/* Badge with order count */}
@@ -68,7 +69,7 @@ export function WhatsAppButton({ cartItems }: WhatsAppButtonProps) {
 
       {/* Tooltip */}
       <div className="absolute bottom-20 right-0 bg-foreground text-white text-xs px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
-        ₹{totalAmount.toLocaleString('en-IN')} • {cartItems.reduce((sum, item) => sum + item.quantity, 0)} items
+        {formatCurrency(totalAmount)} | {cartItems.reduce((sum, item) => sum + item.quantity, 0)} items
       </div>
     </div>
   )

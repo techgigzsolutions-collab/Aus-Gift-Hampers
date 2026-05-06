@@ -44,13 +44,25 @@ export default async function ProductPage({ params }: ProductRouteProps) {
 
   const product = productData as Product
 
-  const { data: relatedData } = await supabase
+  let { data: relatedData } = await supabase
     .from('products')
     .select('*')
     .eq('category', product.category)
     .neq('product_code', product.product_code)
-    .order('created_at', { ascending: false })
+    .order('updated_at', { ascending: false, nullsFirst: false })
     .limit(6)
+
+  if (!relatedData || relatedData.length === 0) {
+    const { data: recentData } = await supabase
+      .from('products')
+      .select('*')
+      .neq('product_code', product.product_code)
+      .order('updated_at', { ascending: false, nullsFirst: false })
+      .order('created_at', { ascending: false })
+      .limit(6)
+
+    relatedData = recentData || []
+  }
 
   return (
     <main className="min-h-screen bg-[#f8f6f3] text-foreground">
