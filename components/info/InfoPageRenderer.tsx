@@ -18,7 +18,7 @@ import {
   Truck,
 } from 'lucide-react'
 import type { InfoPage, InfoSection } from '@/lib/infoPages'
-import { getWhatsAppHref } from '@/lib/whatsapp'
+import { openWhatsApp, generateFloatingMessage } from '@/lib/whatsapp'
 
 export function InfoPageRenderer({ page }: { page: InfoPage }) {
   return (
@@ -361,9 +361,12 @@ function BottomCta() {
           <Link href="/contact-us" className="motion-button rounded-xl bg-white px-6 py-3 font-semibold text-foreground">
             Contact Us
           </Link>
-          <a href={getWhatsAppHref("Hi, I'd like help choosing a premium gift hamper.")} target="_blank" rel="noopener noreferrer" className="motion-button rounded-xl bg-accent px-6 py-3 font-semibold text-white">
+          <button
+            onClick={() => openWhatsApp(() => generateFloatingMessage('Enquiry'))}
+            className="motion-button rounded-xl bg-accent px-6 py-3 font-semibold text-white"
+          >
             WhatsApp Order
-          </a>
+          </button>
         </div>
       </div>
     </section>

@@ -167,10 +167,12 @@ export async function requestAndSaveLocation(): Promise<UserRegion | null> {
 
 export function formatRegionText(region: UserRegion | null): string {
   if (!region) return 'Not shared'
-
   const parts = [region.city, region.state, region.country].filter(Boolean)
   return parts.join(', ')
 }
+
+/** Alias used by whatsapp.ts and any consumer that prefers this name. */
+export const formatRegion = formatRegionText
 
 export function shouldShowPrompt(): boolean {
   if (typeof window === 'undefined') return false

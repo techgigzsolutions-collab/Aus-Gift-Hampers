@@ -1,12 +1,11 @@
 'use client'
 
 import { useState } from 'react'
-import { usePathname } from 'next/navigation'
 import {
   CartItem,
-  generateFloatingMessage,
+  generateGeneralWhatsAppMessage,
   generateWhatsAppMessage,
-  getWhatsAppLink,
+  openWhatsApp,
 } from '@/lib/whatsapp'
 import { formatCurrency } from '@/lib/currency'
 
@@ -20,30 +19,11 @@ const WhatsAppIcon = () => (
   </svg>
 )
 
-function resolvePageName(pathname: string): string {
-  if (pathname === '/') return 'Home'
-  const map: Record<string, string> = {
-    '/shop': 'Shop',
-    '/cart': 'Cart',
-    '/wishlist': 'Wishlist',
-    '/product': 'Product',
-  }
-  for (const [key, label] of Object.entries(map)) {
-    if (pathname.startsWith(key)) return label
-  }
-  // Capitalise slug
-  const segment = pathname.split('/').filter(Boolean).pop() ?? ''
-  return segment.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
-}
-
 export function WhatsAppButton({ cartItems }: WhatsAppButtonProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const pathname = usePathname()
 
+  // ── Empty cart ──────────────────────────────────────────────────────────────
   if (cartItems.length === 0) {
-    const floatingMsg = generateFloatingMessage(resolvePageName(pathname))
-    const emptyLink = getWhatsAppLink(floatingMsg)
-
     return (
       <div className="fixed bottom-6 right-6 z-40">
         <button
@@ -59,22 +39,19 @@ export function WhatsAppButton({ cartItems }: WhatsAppButtonProps) {
             <p className="mb-3 text-sm text-neutral-600">
               No items in cart yet. Click below to enquire about our collections.
             </p>
-            <a
-              href={emptyLink}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={() => openWhatsApp(generateGeneralWhatsAppMessage)}
               className="block w-full rounded-lg bg-accent px-4 py-2 text-center font-semibold text-white transition-colors duration-300 hover:bg-accent-dark"
             >
               Start Chat
-            </a>
+            </button>
           </div>
         )}
       </div>
     )
   }
 
-  const message = generateWhatsAppMessage(cartItems)
-  const whatsappLink = getWhatsAppLink(message)
+  // ── Cart has items ──────────────────────────────────────────────────────────
   const totalAmount = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0,
@@ -82,18 +59,16 @@ export function WhatsAppButton({ cartItems }: WhatsAppButtonProps) {
 
   return (
     <div className="fixed bottom-6 right-6 z-40 group">
-      <a
-        href={whatsappLink}
-        target="_blank"
-        rel="noopener noreferrer"
+      <button
+        onClick={() => openWhatsApp(() => generateWhatsAppMessage(cartItems))}
         className="whatsapp-float relative flex h-[60px] w-[60px] items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_16px_38px_rgba(37,211,102,0.38)] transition-all duration-300 hover:scale-110 active:scale-95"
-        aria-label={`Order on WhatsApp – ${formatCurrency(totalAmount)}`}
+        aria-label={`Order on WhatsApp - ${formatCurrency(totalAmount)}`}
       >
         <WhatsAppIcon />
         <span className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
           {cartItems.length}
         </span>
-      </a>
+      </button>
 
       <div className="pointer-events-none absolute bottom-20 right-0 whitespace-nowrap rounded-lg bg-foreground px-3 py-2 text-xs text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100">
         {formatCurrency(totalAmount)} |{' '}

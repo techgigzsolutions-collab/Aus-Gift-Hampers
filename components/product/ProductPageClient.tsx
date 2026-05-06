@@ -11,7 +11,7 @@ import type { Product } from '@/types/product'
 import { useCommerce, money, productPrice } from '@/components/commerce/CommerceProvider'
 import { productService } from '@/services/productService'
 import { productSku, productStock } from '@/lib/productIdentity'
-import { getWhatsAppHref } from '@/lib/whatsapp'
+import { buildLocationBlock, openWhatsApp } from '@/lib/whatsapp'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -136,13 +136,6 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
       return
     }
 
-    const message = [
-      'Hi, I want to order:',
-      '',
-      `- ${product.name} (${productSku(product)})`,
-      `  Quantity: ${quantity}`,
-    ].join('\n')
-
     try {
       await productService.updateEnquiredStock(product.id, quantity)
       setVisibleEnquiredStock(current => current + quantity)
@@ -150,7 +143,17 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
       console.error('Unable to update enquired stock', error)
     }
 
-    window.open(getWhatsAppHref(message), '_blank')
+    // Build message on click — region read fresh at this moment
+    openWhatsApp(() => [
+      'Hi, I want to order:',
+      '',
+      `- ${product.name} (${productSku(product)})`,
+      `  Quantity: ${quantity}`,
+      `  Price: ${money(unitPrice * quantity)}`,
+      `  Delivery: ${product.estimated_delivery}`,
+      '',
+      buildLocationBlock(),
+    ].join('\n'))
   }
 
   const changeImage = (direction: 1 | -1) => {

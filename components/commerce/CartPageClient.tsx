@@ -8,7 +8,7 @@ import type { Product } from '@/types/product'
 import { money, productPrice, useCommerce } from '@/components/commerce/CommerceProvider'
 import { productService } from '@/services/productService'
 import { productSku, productStock } from '@/lib/productIdentity'
-import { getWhatsAppHref } from '@/lib/whatsapp'
+import { buildLocationBlock, openWhatsApp } from '@/lib/whatsapp'
 
 export function CartPageClient({ products }: { products: Product[] }) {
   const commerce = useCommerce()
@@ -28,22 +28,36 @@ export function CartPageClient({ products }: { products: Product[] }) {
   const handleWhatsAppCheckout = async () => {
     if (lines.length === 0) return
 
-    const message = [
-      'Hi, I want to order:',
+    // Fire stock updates in parallel first
+    await Promise.allSettled(
+      lines.map(({ item, product }) =>
+        productService.updateEnquiredStock(product.id, item.qty)
+      )
+    )
+
+    // Build message on click — region read fresh at this moment
+    openWhatsApp(() => [
+      '🎁 *Aus Gift Hampers*',
+      'Luxury Gift Hamper Enquiry',
+      '',
+      'Hello 👋',
+      '',
+      'I would like to order the following:',
       '',
       ...lines.flatMap(({ item, product }) => [
         `- ${product.name} (${productSku(product)})`,
         `  Quantity: ${item.qty}`,
+        `  Price: ${money(productPrice(product) * item.qty)}`,
       ]),
       '',
-      `Total: ${money(subtotal)}`,
-    ].join('\n')
-
-    await Promise.allSettled(
-      lines.map(({ item, product }) => productService.updateEnquiredStock(product.id, item.qty))
-    )
-
-    window.open(getWhatsAppHref(message), '_blank')
+      `💰 Total: ${money(subtotal)}`,
+      '',
+      'Please share delivery details and payment options.',
+      '',
+      buildLocationBlock(),
+      '',
+      'Thank you ✨',
+    ].join('\n'))
   }
 
   return (
