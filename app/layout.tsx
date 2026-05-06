@@ -63,7 +63,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="scroll-smooth" style={{ ...playfair.style, ...poppins.style, ...inter.style }}>
+    <html lang="en" style={{ ...playfair.style, ...poppins.style, ...inter.style }}>
       <body className="bg-background text-foreground font-sans antialiased">
         <CommerceProvider>
           <MotionSystem />
