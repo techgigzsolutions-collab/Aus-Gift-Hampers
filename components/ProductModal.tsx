@@ -175,6 +175,9 @@ export function ProductModal({
       return
     }
 
+    const { getStoredRegion, buildLocationBlock } = await import('@/lib/whatsapp')
+    const region = getStoredRegion()
+
     const message = [
       'Hi, I want to order:',
       '',
@@ -182,6 +185,8 @@ export function ProductModal({
       `  Quantity: ${quantity}`,
       `  Price: ${money(unitPrice * quantity)}`,
       `  Delivery: ${product.estimated_delivery}`,
+      '',
+      buildLocationBlock(region),
     ].join('\n')
 
     try {

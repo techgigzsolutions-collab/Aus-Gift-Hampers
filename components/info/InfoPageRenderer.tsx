@@ -17,7 +17,7 @@ import {
   Sparkles,
   Truck,
 } from 'lucide-react'
-import type { InfoPage } from '@/lib/infoPages'
+import type { InfoPage, InfoSection } from '@/lib/infoPages'
 import { getWhatsAppHref } from '@/lib/whatsapp'
 
 export function InfoPageRenderer({ page }: { page: InfoPage }) {
@@ -81,14 +81,18 @@ function LegalTemplate({ page }: { page: InfoPage }) {
             <p className="mt-2 text-neutral-700">{page.lastUpdated}</p>
           </div>
           <div className="space-y-12">
-            {page.sections.map(section => (
-              <section key={section.id} id={section.id} data-motion-child className="scroll-mt-28">
-                <h2 className="font-serif text-3xl font-bold">{section.heading}</h2>
-                <p className="mt-4 leading-8 text-neutral-650">{section.body}</p>
-                {section.bullets && <BulletList items={section.bullets} />}
-                <div className="mt-8 h-px bg-border" />
-              </section>
-            ))}
+            {page.sections.map(section =>
+              section.id === 'location-permissions' ? (
+                <LocationPrivacyCard key={section.id} section={section} />
+              ) : (
+                <section key={section.id} id={section.id} data-motion-child className="scroll-mt-28">
+                  <h2 className="font-serif text-3xl font-bold">{section.heading}</h2>
+                  <p className="mt-4 leading-8 text-neutral-650">{section.body}</p>
+                  {section.bullets && <BulletList items={section.bullets} />}
+                  <div className="mt-8 h-px bg-border" />
+                </section>
+              )
+            )}
           </div>
         </article>
       </div>
@@ -304,6 +308,46 @@ function BulletList({ items }: { items: string[] }) {
         </li>
       ))}
     </ul>
+  )
+}
+
+function LocationPrivacyCard({ section }: { section: InfoSection }) {
+  return (
+    <section id={section.id} data-motion-child className="scroll-mt-28">
+      <div className="rounded-3xl border border-[#d9b97b]/60 bg-[linear-gradient(135deg,#fdf8ee,#faf4e5)] p-7 shadow-[0_18px_50px_rgba(200,169,106,0.13)]">
+        {/* Header */}
+        <div className="mb-5 flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[linear-gradient(135deg,#f5e9d0,#eedbb8)] shadow-[0_8px_20px_rgba(200,169,106,0.18)]">
+            <MapPin className="h-6 w-6 text-[#c8a96a]" strokeWidth={1.8} />
+          </div>
+          <h2 className="font-serif text-3xl font-bold text-[#1f1915]">{section.heading}</h2>
+        </div>
+
+        {/* Body */}
+        <p className="leading-8 text-[#4f4538]">{section.body}</p>
+
+        {/* Bullet points */}
+        {section.bullets && (
+          <ul className="mt-5 space-y-3">
+            {section.bullets.map(item => (
+              <li key={item} className="flex items-start gap-3">
+                <span className="mt-2.5 h-1.5 w-1.5 shrink-0 rounded-full bg-[#c8a96a]" />
+                <span className="text-[#4f4538]">{item}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {/* Footer note */}
+        <div className="mt-6 flex items-center gap-2 rounded-2xl border border-[#e8d9b7] bg-white/60 px-4 py-3">
+          <ShieldCheck className="h-4 w-4 shrink-0 text-[#c8a96a]" />
+          <p className="text-xs text-[#6b5f52]">
+            You can revoke location permissions anytime from your browser settings.
+          </p>
+        </div>
+      </div>
+      <div className="mt-8 h-px bg-border" />
+    </section>
   )
 }
 

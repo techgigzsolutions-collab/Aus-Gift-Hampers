@@ -3,6 +3,7 @@ import { Playfair_Display, Poppins, Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { MotionSystem } from '@/components/MotionSystem'
 import { CommerceProvider } from '@/components/commerce/CommerceProvider'
+import { LocationPrompt } from '@/components/location/LocationPrompt'
 import './globals.css'
 
 const playfair = Playfair_Display({
@@ -68,6 +69,7 @@ export default function RootLayout({
         <CommerceProvider>
           <MotionSystem />
           {children}
+          <LocationPrompt />
         </CommerceProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>

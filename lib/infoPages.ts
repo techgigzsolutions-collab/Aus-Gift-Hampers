@@ -292,9 +292,21 @@ export const infoPages = {
         body: 'We may use cookies for essential site features, saved preferences, analytics, and performance insights.',
       },
       {
+        id: 'location-permissions',
+        heading: '📍 Location Permissions',
+        body: 'Aus Gift Hampers may request approximate location access to help personalise delivery support and customer assistance. When permission is granted, we only store general location information such as city, state, and country. Exact GPS coordinates are never stored or shared. This information is used solely to improve enquiry handling and delivery communication.',
+        bullets: [
+          'Only city, state, and country are stored — never GPS coordinates',
+          'Location data remains on your device in browser local storage',
+          'Used only for delivery assistance and enquiry personalisation',
+          'Never sold, shared publicly, or sent to third parties',
+          'You can revoke location permissions anytime from your browser settings',
+        ],
+      },
+      {
         id: 'your-choices',
         heading: 'Your Choices',
-        body: 'You can manage cookies in your browser settings, though some features may not work as intended if disabled.',
+        body: 'You can manage cookies and location permissions in your browser settings, though some features may not work as intended if disabled.',
       },
     ],
   },
