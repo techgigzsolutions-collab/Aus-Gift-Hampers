@@ -11,7 +11,7 @@ import type { Product } from '@/types/product'
 import { useCommerce, money, productPrice } from '@/components/commerce/CommerceProvider'
 import { productService } from '@/services/productService'
 import { productSku, productStock } from '@/lib/productIdentity'
-import { buildLocationBlock, openWhatsApp } from '@/lib/whatsapp'
+import { buildLocationBlock, getWhatsAppLink } from '@/lib/whatsapp'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -39,6 +39,38 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
   const savingsPercent = hasDiscount && product.price > 0 ? Math.round((savings / product.price) * 100) : 0
   const hasRating = product.rating !== null || product.reviews_count > 0
   const related = relatedProducts.filter(item => item.product_code !== product.product_code).slice(0, 4)
+
+  // ── Build WhatsApp href at render time ──────────────────────────────────────
+  // CRITICAL for Safari iOS compatibility.
+  //
+  // Safari iOS blocks any navigation (window.open, window.location.href) that
+  // is not the *direct synchronous result* of a user gesture (tap/click).
+  //
+  // The old implementation called `openWhatsApp()` inside an `async` function
+  // after an `await productService.updateEnquiredStock(...)`. The `await`
+  // suspends the call stack — the navigation no longer runs inside the
+  // original user gesture. WebKit sees this as a programmatic navigation and
+  // blocks it silently (no error, no alert — the link just does nothing).
+  //
+  // Fix: pre-compute the WhatsApp href synchronously at render time and put it
+  // on a real <a> element. The stock-update side effect is fired separately
+  // (fire-and-forget) from an onClick on the <a> — the navigation itself
+  // happens natively through the href, within the user gesture.
+  //
+  // This is the same pattern used by WhatsApp's own "wa.me" link pages.
+  const whatsappMessage = [
+    'Hi, I want to order:',
+    '',
+    `- ${product.name} (${productSku(product)})`,
+    `  Quantity: ${quantity}`,
+    `  Price: ${money(unitPrice * quantity)}`,
+    `  Delivery: ${product.estimated_delivery}`,
+    '',
+    buildLocationBlock(),
+  ].join('\n')
+
+  const whatsappHref = isOutOfStock ? undefined : getWhatsAppLink(whatsappMessage)
+  // ───────────────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     commerce.registerProducts([product, ...relatedProducts])
@@ -115,7 +147,6 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
         showToast(`Only ${stock} items available`)
         return current
       }
-
       return Math.min(Math.max(next, 1), stock)
     })
   }
@@ -125,35 +156,20 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
       showToast('Out of Stock')
       return
     }
-
     commerce.addToCart(product, quantity)
     showToast(`Added ${quantity} to cart`)
   }
 
-  const handleWhatsApp = async () => {
-    if (isOutOfStock) {
-      showToast('Out of Stock')
-      return
-    }
-
-    try {
-      await productService.updateEnquiredStock(product.id, quantity)
-      setVisibleEnquiredStock(current => current + quantity)
-    } catch (error) {
-      console.error('Unable to update enquired stock', error)
-    }
-
-    // Build message on click — region read fresh at this moment
-    openWhatsApp(() => [
-      'Hi, I want to order:',
-      '',
-      `- ${product.name} (${productSku(product)})`,
-      `  Quantity: ${quantity}`,
-      `  Price: ${money(unitPrice * quantity)}`,
-      `  Delivery: ${product.estimated_delivery}`,
-      '',
-      buildLocationBlock(),
-    ].join('\n'))
+  // Fire-and-forget: update enquired stock in the background.
+  // Called from the <a> element's onClick — does NOT block navigation.
+  // Navigation happens through href, not through this function.
+  const handleWhatsAppClick = () => {
+    if (isOutOfStock) return
+    // Update enquired stock in the background — does not affect navigation
+    productService
+      .updateEnquiredStock(product.id, quantity)
+      .then(() => setVisibleEnquiredStock(n => n + quantity))
+      .catch(err => console.error('Unable to update enquired stock', err))
   }
 
   const changeImage = (direction: 1 | -1) => {
@@ -177,6 +193,7 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
         </div>
 
         <div data-product-hero className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16">
+          {/* Images */}
           <section className="space-y-4">
             <div
               className="relative overflow-hidden rounded-2xl border border-border bg-card aspect-[4/4.5]"
@@ -229,6 +246,7 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
             )}
           </section>
 
+          {/* Details */}
           <section className="text-left">
             {product.category && (
               <p className="text-xs sm:text-sm uppercase tracking-[0.24em] text-accent">
@@ -326,14 +344,47 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
                 <ShoppingBag className="h-4 w-4" />
                 Add to Cart
               </button>
-              <button
-                onClick={handleWhatsApp}
-                disabled={isOutOfStock}
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-white px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:bg-muted"
-              >
-                <MessageCircle className="h-4 w-4" />
-                WhatsApp Order
-              </button>
+
+              {/*
+                ✅ <a> tag for WhatsApp — required for Safari iOS compatibility.
+
+                Why not <button onClick={handleWhatsApp}>:
+                ────────────────────────────────────────────
+                The old code was:
+                  const handleWhatsApp = async () => {
+                    await productService.updateEnquiredStock(...)  ← await here
+                    openWhatsApp(...)                              ← BLOCKED on iOS
+                  }
+
+                Any `await` before window.open() / window.location.href
+                suspends the JS call stack. WebKit exits the "user gesture"
+                context at the await boundary. When the code resumes after
+                the await, it is no longer inside a trusted user gesture,
+                so Safari silently blocks the navigation. No error is thrown.
+
+                Fix: use a real <a href> so WebKit handles navigation natively
+                (always trusted). The onClick fires the stock-update as a
+                background side effect — it does NOT block or delay the
+                navigation in any way.
+              */}
+              {whatsappHref ? (
+                <a
+                  href={whatsappHref}
+                  onClick={handleWhatsAppClick}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-white px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:border-accent hover:text-accent"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  WhatsApp Order
+                </a>
+              ) : (
+                <button
+                  disabled
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-muted px-5 py-3 text-sm font-semibold text-muted-foreground cursor-not-allowed"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  WhatsApp Order
+                </button>
+              )}
             </div>
           </section>
         </div>
@@ -367,7 +418,9 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
             <div className="flex items-end justify-between gap-4">
               <div>
                 <h2 className="text-xl sm:text-2xl font-semibold">You May Also Like</h2>
-                {product.category && <p className="mt-2 text-sm text-muted-foreground">More from {product.category}</p>}
+                {product.category && (
+                  <p className="mt-2 text-sm text-muted-foreground">More from {product.category}</p>
+                )}
               </div>
               <Link href="/shop" className="text-sm font-medium text-accent hover:opacity-80 transition-opacity">
                 View all
@@ -392,7 +445,9 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
                     />
                   </div>
                   <div className="p-4">
-                    {item.category && <p className="text-xs uppercase tracking-[0.2em] text-accent">{item.category}</p>}
+                    {item.category && (
+                      <p className="text-xs uppercase tracking-[0.2em] text-accent">{item.category}</p>
+                    )}
                     <h3 className="mt-2 text-lg font-semibold text-foreground">{item.name}</h3>
                     <p className="mt-2 text-sm text-muted-foreground">Code: {productSku(item)}</p>
                     <div className="mt-4 flex items-center justify-between gap-3">
@@ -416,6 +471,7 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
         )}
       </div>
 
+      {/* Mobile sticky CTA bar */}
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 p-4 backdrop-blur md:hidden">
         <div className="mb-3 flex items-center justify-between text-sm">
           <span className="text-muted-foreground">{quantity} item{quantity !== 1 ? 's' : ''}</span>
@@ -430,14 +486,26 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
             <ShoppingBag className="h-4 w-4" />
             Add to Cart
           </button>
-          <button
-            onClick={handleWhatsApp}
-            disabled={isOutOfStock}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold text-foreground disabled:cursor-not-allowed disabled:bg-muted"
-          >
-            <MessageCircle className="h-4 w-4" />
-            WhatsApp
-          </button>
+
+          {/* Same <a> pattern for the mobile sticky bar */}
+          {whatsappHref ? (
+            <a
+              href={whatsappHref}
+              onClick={handleWhatsAppClick}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-white px-4 py-3 text-sm font-semibold text-foreground"
+            >
+              <MessageCircle className="h-4 w-4" />
+              WhatsApp
+            </a>
+          ) : (
+            <button
+              disabled
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-muted px-4 py-3 text-sm font-semibold text-muted-foreground cursor-not-allowed"
+            >
+              <MessageCircle className="h-4 w-4" />
+              WhatsApp
+            </button>
+          )}
         </div>
       </div>
 

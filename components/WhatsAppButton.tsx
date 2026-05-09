@@ -5,9 +5,34 @@ import {
   CartItem,
   generateGeneralWhatsAppMessage,
   generateWhatsAppMessage,
-  openWhatsApp,
+  getWhatsAppLink,
 } from '@/lib/whatsapp'
 import { formatCurrency } from '@/lib/currency'
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Safari / iOS deep-link compatibility notes
+// ─────────────────────────────────────────────────────────────────────────────
+// iOS Safari blocks window.open() for external app deep-links unless it is
+// the *direct synchronous result* of a real <a> click. Even then, Safari
+// treats window.open() from JS with extreme suspicion.
+//
+// The ONLY universally reliable pattern across:
+//   - iPhone Safari
+//   - Chrome iOS (uses Safari's WKWebView)
+//   - Android Chrome / Firefox
+//   - Desktop Chrome / Firefox / Safari
+//
+// …is a real <a href> element with no JS in the middle.
+//
+// For the cart button (where the message must be built dynamically):
+//   • We build the href synchronously at render time (or on state change)
+//     and put it directly on an <a> tag.
+//   • This means no onClick, no window.open(), no window.location.href.
+//   • Safari sees a plain anchor click → allows the navigation unconditionally.
+//
+// Rule: every WhatsApp CTA in this component must be an <a> tag, not a button
+// with an onClick that calls window.open() or window.location.href.
+// ─────────────────────────────────────────────────────────────────────────────
 
 interface WhatsAppButtonProps {
   cartItems: CartItem[]
@@ -22,14 +47,27 @@ const WhatsAppIcon = () => (
 export function WhatsAppButton({ cartItems }: WhatsAppButtonProps) {
   const [isOpen, setIsOpen] = useState(false)
 
+  // ── Build hrefs at render time (synchronous, no async gap) ──────────────────
+  // Safari requires the href to be a real attribute on the <a> element.
+  // Building it here (not inside onClick) means no JS runs between tap and
+  // navigation — the browser sees a clean anchor activation.
+  const generalHref = getWhatsAppLink(generateGeneralWhatsAppMessage())
+  const cartHref =
+    cartItems.length > 0
+      ? getWhatsAppLink(generateWhatsAppMessage(cartItems))
+      : generalHref
+
   // ── Empty cart ──────────────────────────────────────────────────────────────
   if (cartItems.length === 0) {
     return (
       <div className="fixed bottom-6 right-6 z-40">
+        {/* Toggle button — opens the tooltip panel, not WhatsApp itself */}
         <button
-          onClick={() => setIsOpen(!isOpen)}
+          type="button"
+          onClick={() => setIsOpen(prev => !prev)}
           className="whatsapp-float flex h-[60px] w-[60px] items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_16px_38px_rgba(37,211,102,0.38)] transition-all duration-300 hover:scale-110 active:scale-95"
           aria-label="Contact us on WhatsApp"
+          aria-expanded={isOpen}
         >
           <WhatsAppIcon />
         </button>
@@ -39,12 +77,20 @@ export function WhatsAppButton({ cartItems }: WhatsAppButtonProps) {
             <p className="mb-3 text-sm text-neutral-600">
               No items in cart yet. Click below to enquire about our collections.
             </p>
-            <button
-              onClick={() => openWhatsApp(generateGeneralWhatsAppMessage)}
+            {/*
+              ✅ <a> tag — Safari allows this unconditionally.
+              Never use a <button> + window.open() / window.location.href
+              for WhatsApp deep-links on iOS.
+            */}
+            <a
+              href={generalHref}
+              // Do NOT use target="_blank" — it triggers a popup check on iOS Safari.
+              // Navigating in the same frame is fine; WhatsApp will open and
+              // the user returns with the back gesture / button.
               className="block w-full rounded-lg bg-accent px-4 py-2 text-center font-semibold text-white transition-colors duration-300 hover:bg-accent-dark"
             >
               Start Chat
-            </button>
+            </a>
           </div>
         )}
       </div>
@@ -56,23 +102,41 @@ export function WhatsAppButton({ cartItems }: WhatsAppButtonProps) {
     (sum, item) => sum + item.price * item.quantity,
     0,
   )
+  const totalQty = cartItems.reduce((sum, item) => sum + item.quantity, 0)
 
   return (
     <div className="fixed bottom-6 right-6 z-40 group">
-      <button
-        onClick={() => openWhatsApp(() => generateWhatsAppMessage(cartItems))}
+      {/*
+        ✅ <a> tag wrapping the WhatsApp icon.
+
+        Why <a> instead of <button onClick={openWhatsApp(...)}>:
+        ─────────────────────────────────────────────────────────
+        • Safari iOS popup blocker treats window.open() as a popup
+          even when called directly inside onClick, for external
+          app scheme URLs (wa.me, whatsapp://).
+        • An <a href> click is classified as a "user-initiated
+          navigation" — the highest trust level in WebKit — and
+          is never intercepted by the popup blocker.
+        • Chrome iOS (WKWebView) applies the same rules.
+        • This approach also works on Android and desktop with
+          zero change in behaviour.
+
+        No target="_blank" — see note in the empty-cart branch above.
+      */}
+      <a
+        href={cartHref}
         className="whatsapp-float relative flex h-[60px] w-[60px] items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_16px_38px_rgba(37,211,102,0.38)] transition-all duration-300 hover:scale-110 active:scale-95"
-        aria-label={`Order on WhatsApp - ${formatCurrency(totalAmount)}`}
+        aria-label={`Order on WhatsApp — ${formatCurrency(totalAmount)}`}
       >
         <WhatsAppIcon />
         <span className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
           {cartItems.length}
         </span>
-      </button>
+      </a>
 
+      {/* Hover tooltip — pointer-events-none so it never intercepts the tap */}
       <div className="pointer-events-none absolute bottom-20 right-0 whitespace-nowrap rounded-lg bg-foreground px-3 py-2 text-xs text-white opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-        {formatCurrency(totalAmount)} |{' '}
-        {cartItems.reduce((sum, item) => sum + item.quantity, 0)} items
+        {formatCurrency(totalAmount)} | {totalQty} item{totalQty !== 1 ? 's' : ''}
       </div>
     </div>
   )

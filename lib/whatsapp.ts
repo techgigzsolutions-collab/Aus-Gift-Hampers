@@ -46,19 +46,39 @@ export function getWhatsAppHref(message?: string): string {
 
 /* --------------------------------------------------
    PRIMARY OPEN HELPER
-   Single entry-point for every WhatsApp navigation.
-   Message is built lazily inside the click handler
-   so getStoredRegion() is always called at click-time.
+   ─────────────────────────────────────────────────
+   Safari iOS BLOCKS window.open() unless it is the
+   *direct synchronous result* of a trusted user tap,
+   and even then it often fails for deep-links to
+   external apps (WhatsApp, tel:, mailto:).
 
+   The only universally reliable approach on iOS is:
+     window.location.href = url          ← same-frame navigation
+   or a real <a href> element.
+
+   We use window.location.href here because:
+   • It is treated as a user-initiated navigation
+   • It works for app deep-links (wa.me) on iOS Safari
+   • It is not blocked by Safari's popup blocker
+   • It works identically on Chrome iOS, Android, and desktop
+
+   The page will navigate away momentarily but WhatsApp
+   will open (or App Store will prompt if not installed)
+   and the browser back-button / back-swipe returns the
+   user to the page they were on.
+   ─────────────────────────────────────────────────
    Usage:
      onClick={() => openWhatsApp(() => generateWhatsAppMessage(items))}
-     onClick={() => openWhatsApp(() => generateGeneralWhatsAppMessage())}
+     onClick={() => openWhatsApp(generateGeneralWhatsAppMessage)}
 -------------------------------------------------- */
 
 export function openWhatsApp(buildMessage: () => string): void {
   const message = buildMessage()
   const url = getWhatsAppLink(message)
-  window.open(url, '_blank', 'noopener,noreferrer')
+  // window.location.href is the only reliable cross-browser method
+  // for deep-link navigation on iOS Safari. Never use window.open()
+  // for WhatsApp links — it is silently blocked on Safari.
+  window.location.href = url
 }
 
 /* --------------------------------------------------
@@ -73,31 +93,9 @@ export function generateOrderSummary(items: CartItem[]): OrderSummary {
 
 /* --------------------------------------------------
    CANONICAL MESSAGE: cart / product order enquiry
-
-   Template (UTF-safe, no copy-pasted emoji bytes):
-     *Aus Gift Hampers*
-     Luxury Gift Hamper Enquiry
-
-     Hello,
-
-     I would like to order the following:
-
-     - Product Name (SKU-001)
-       Quantity: 2
-       Price: AUD 120.00
-
-     Total: AUD 240.00
-
-     Customer Location:
-     Sydney, NSW, Australia
-
-     Please share delivery details and payment options.
-
-     Thank you.
 -------------------------------------------------- */
 
 export function generateWhatsAppMessage(items: CartItem[]): string {
-  // Region read at call-time (i.e. on click) — never stale
   const region = getStoredRegion()
   const locationText = formatRegion(region)
 
@@ -137,22 +135,6 @@ export function generateWhatsAppMessage(items: CartItem[]): string {
 
 /* --------------------------------------------------
    CANONICAL MESSAGE: general / floating / CTA
-
-   Template:
-     *Aus Gift Hampers*
-     Luxury Gift Hamper Enquiry
-
-     Hello,
-
-     I would like assistance choosing a gift hamper.
-
-     Customer Location:
-     Sydney, NSW, Australia
-
-     Please help me with recommendations based on
-     occasion and budget.
-
-     Thank you.
 -------------------------------------------------- */
 
 export function generateGeneralWhatsAppMessage(): string {
@@ -172,26 +154,6 @@ export function generateGeneralWhatsAppMessage(): string {
 
 /* --------------------------------------------------
    CANONICAL MESSAGE: single product (modal / page)
-
-   Template:
-     *Aus Gift Hampers*
-     Luxury Gift Hamper Enquiry
-
-     Hello,
-
-     I would like to order:
-
-     - Product Name (SKU-001)
-       Quantity: 2
-       Price: AUD 120.00
-       Delivery: 5-7 business days
-
-     Customer Location:
-     Sydney, NSW, Australia
-
-     Please share delivery details and payment options.
-
-     Thank you.
 -------------------------------------------------- */
 
 export function generateProductWhatsAppMessage(params: {
@@ -222,8 +184,6 @@ export function generateProductWhatsAppMessage(params: {
 
 /* --------------------------------------------------
    DEPRECATED ALIASES
-   Kept so any import that hasn't been updated yet
-   still compiles. Use the canonical functions above.
 -------------------------------------------------- */
 
 /** @deprecated Use generateGeneralWhatsAppMessage() */
@@ -231,13 +191,13 @@ export function generateFloatingMessage(_pageName?: string): string {
   return generateGeneralWhatsAppMessage()
 }
 
-/** @deprecated Use generateProductWhatsAppMessage() */
+/** @deprecated Use buildLocationBlock() */
 export function buildLocationBlock(_region?: UserRegion | null): string {
   const r = _region !== undefined ? _region : getStoredRegion()
   return 'Customer Location:\n' + formatRegion(r)
 }
 
-/** @deprecated Use generateSingleProductMessage() or generateWhatsAppMessage() */
+/** @deprecated Use generateProductWhatsAppMessage() */
 export function generateSingleProductMessage(item: CartItem): string {
   return generateProductWhatsAppMessage({
     name: item.name,
