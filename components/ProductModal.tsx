@@ -265,6 +265,7 @@ export function ProductModal({
                         alt={product.name}
                         fill
                         priority
+                        loading="eager"
                         className="object-cover transition-transform duration-700 hover:scale-[1.08]"
                         sizes="(max-width: 1024px) 100vw, 60vw"
                       />
