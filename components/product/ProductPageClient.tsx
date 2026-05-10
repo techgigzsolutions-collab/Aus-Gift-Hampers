@@ -11,7 +11,7 @@ import type { Product } from '@/types/product'
 import { useCommerce, money, productPrice } from '@/components/commerce/CommerceProvider'
 import { productService } from '@/services/productService'
 import { productSku, productStock } from '@/lib/productIdentity'
-import { buildLocationBlock, getWhatsAppLink } from '@/lib/whatsapp'
+import { generateProductWhatsAppMessage, getWhatsAppLink } from '@/lib/whatsapp'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -40,34 +40,15 @@ export function ProductPageClient({ product, relatedProducts }: ProductPageClien
   const hasRating = product.rating !== null || product.reviews_count > 0
   const related = relatedProducts.filter(item => item.product_code !== product.product_code).slice(0, 4)
 
-  // ── Build WhatsApp href at render time ──────────────────────────────────────
-  // CRITICAL for Safari iOS compatibility.
-  //
-  // Safari iOS blocks any navigation (window.open, window.location.href) that
-  // is not the *direct synchronous result* of a user gesture (tap/click).
-  //
-  // The old implementation called `openWhatsApp()` inside an `async` function
-  // after an `await productService.updateEnquiredStock(...)`. The `await`
-  // suspends the call stack — the navigation no longer runs inside the
-  // original user gesture. WebKit sees this as a programmatic navigation and
-  // blocks it silently (no error, no alert — the link just does nothing).
-  //
-  // Fix: pre-compute the WhatsApp href synchronously at render time and put it
-  // on a real <a> element. The stock-update side effect is fired separately
-  // (fire-and-forget) from an onClick on the <a> — the navigation itself
-  // happens natively through the href, within the user gesture.
-  //
-  // This is the same pattern used by WhatsApp's own "wa.me" link pages.
-  const whatsappMessage = [
-    'Hi, I want to order:',
-    '',
-    `- ${product.name} (${productSku(product)})`,
-    `  Quantity: ${quantity}`,
-    `  Price: ${money(unitPrice * quantity)}`,
-    `  Delivery: ${product.estimated_delivery}`,
-    '',
-    buildLocationBlock(),
-  ].join('\n')
+  // generateProductWhatsAppMessage reads region at call-time via getStoredRegion()
+  // inside the function body — always fresh when quantity changes.
+  const whatsappMessage = generateProductWhatsAppMessage({
+    name: product.name,
+    sku: productSku(product),
+    quantity,
+    price: unitPrice * quantity,
+    delivery: product.estimated_delivery,
+  })
 
   const whatsappHref = isOutOfStock ? undefined : getWhatsAppLink(whatsappMessage)
   // ───────────────────────────────────────────────────────────────────────────

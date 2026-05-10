@@ -1,8 +1,9 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { Award, MessageCircle, ShieldCheck, Sparkles, Star, Truck } from 'lucide-react'
-import { getWhatsAppHref } from '@/lib/whatsapp'
+import { generateGeneralWhatsAppMessage, getWhatsAppLink } from '@/lib/whatsapp'
 
  
 
@@ -145,6 +146,14 @@ export function TrustScene() {
 }
 
 export function FinalCtaScene() {
+  // Build href synchronously so it lands on a real <a> attribute.
+  // No target="_blank" — same-frame navigation is required for iOS Safari
+  // to reliably open the WhatsApp app. New-tab navigations to wa.me are
+  // classified as popups and silently blocked on iPhone.
+  // Region is read right now (render time); if the user just granted location
+  // it will already be in localStorage by the time this scene mounts.
+  const whatsappHref = getWhatsAppLink(generateGeneralWhatsAppMessage())
+
   return (
     <section
       id="final-cta"
@@ -162,11 +171,25 @@ export function FinalCtaScene() {
         <p data-motion-child className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-neutral-600">
           Tell us the occasion, delivery window, and budget. We will help you choose the right hamper.
         </p>
+        {/*
+          ✅ <a href> with no target="_blank".
+
+          Why not target="_blank":
+          ─────────────────────────────────────────────
+          iOS Safari treats new-tab navigations to external app
+          URLs (wa.me, whatsapp://) as popup attempts and blocks
+          them silently — no error, no fallback, link does nothing.
+
+          Same-frame navigation (no target) is classified as a
+          "user-initiated navigation" — the highest WebKit trust
+          level. WhatsApp opens unconditionally. The user returns
+          via back-swipe / back button.
+
+          This is identical behaviour to how wa.me itself works.
+        */}
         <a
           data-motion-child
-          href={getWhatsAppHref("Hi, I'd like help choosing a premium gift hamper.")}
-          target="_blank"
-          rel="noopener noreferrer"
+          href={whatsappHref}
           className="motion-button cta-pulse mt-10 inline-flex items-center justify-center gap-3 rounded-xl bg-accent px-8 py-4 font-semibold text-white transition-colors hover:bg-accent-dark"
         >
           <MessageCircle className="h-5 w-5" />

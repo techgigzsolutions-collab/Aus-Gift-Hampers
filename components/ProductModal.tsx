@@ -24,7 +24,7 @@ import type { Product } from '@/types/product'
 import { formatCurrency } from '@/lib/currency'
 import { productService } from '@/services/productService'
 import { isLowStock, productSku, productStock } from '@/lib/productIdentity'
-import { buildLocationBlock, openWhatsApp } from '@/lib/whatsapp'
+import { generateProductWhatsAppMessage, openWhatsApp } from '@/lib/whatsapp'
 import gsap from 'gsap'
 
 interface ProductModalProps {
@@ -183,17 +183,16 @@ export function ProductModal({
       console.error('Unable to update enquired stock', error)
     }
 
-    // Build message on click — region read fresh from localStorage right now
-    openWhatsApp(() => [
-      'Hi, I want to order:',
-      '',
-      `- ${product.name} (${productSku(product)})`,
-      `  Quantity: ${quantity}`,
-      `  Price: ${money(unitPrice * quantity)}`,
-      `  Delivery: ${product.estimated_delivery}`,
-      '',
-      buildLocationBlock(), // no arg → reads getStoredRegion() internally
-    ].join('\n'))
+    // generateProductWhatsAppMessage reads region at call-time
+    openWhatsApp(() =>
+      generateProductWhatsAppMessage({
+        name: product.name,
+        sku: productSku(product),
+        quantity,
+        price: unitPrice * quantity,
+        delivery: product.estimated_delivery,
+      })
+    )
   }
 
   const changeImage = (direction: 1 | -1) => {

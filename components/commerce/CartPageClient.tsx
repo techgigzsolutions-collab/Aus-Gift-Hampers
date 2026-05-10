@@ -8,7 +8,7 @@ import type { Product } from '@/types/product'
 import { money, productPrice, useCommerce } from '@/components/commerce/CommerceProvider'
 import { productService } from '@/services/productService'
 import { productSku, productStock } from '@/lib/productIdentity'
-import { buildLocationBlock, openWhatsApp } from '@/lib/whatsapp'
+import { generateWhatsAppMessage, openWhatsApp } from '@/lib/whatsapp'
 
 export function CartPageClient({ products }: { products: Product[] }) {
   const commerce = useCommerce()
@@ -35,29 +35,18 @@ export function CartPageClient({ products }: { products: Product[] }) {
       )
     )
 
-    // Build message on click — region read fresh at this moment
-    openWhatsApp(() => [
-      '🎁 *Aus Gift Hampers*',
-      'Luxury Gift Hamper Enquiry',
-      '',
-      'Hello 👋',
-      '',
-      'I would like to order the following:',
-      '',
-      ...lines.flatMap(({ item, product }) => [
-        `- ${product.name} (${productSku(product)})`,
-        `  Quantity: ${item.qty}`,
-        `  Price: ${money(productPrice(product) * item.qty)}`,
-      ]),
-      '',
-      `💰 Total: ${money(subtotal)}`,
-      '',
-      'Please share delivery details and payment options.',
-      '',
-      buildLocationBlock(),
-      '',
-      'Thank you ✨',
-    ].join('\n'))
+    // generateWhatsAppMessage reads region at call-time — never stale
+    openWhatsApp(() =>
+      generateWhatsAppMessage(
+        lines.map(({ item, product }) => ({
+          id: product.id,
+          product_code: productSku(product),
+          name: product.name,
+          price: productPrice(product),
+          quantity: item.qty,
+        }))
+      )
+    )
   }
 
   return (

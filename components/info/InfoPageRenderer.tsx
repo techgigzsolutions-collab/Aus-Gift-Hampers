@@ -18,7 +18,7 @@ import {
   Truck,
 } from 'lucide-react'
 import type { InfoPage, InfoSection } from '@/lib/infoPages'
-import { openWhatsApp, generateFloatingMessage } from '@/lib/whatsapp'
+import { generateGeneralWhatsAppMessage, getWhatsAppLink } from '@/lib/whatsapp'
 
 export function InfoPageRenderer({ page }: { page: InfoPage }) {
   return (
@@ -352,6 +352,11 @@ function LocationPrivacyCard({ section }: { section: InfoSection }) {
 }
 
 function BottomCta() {
+  // Built at render time — region already in localStorage by the time
+  // any info page mounts. <a href> with no target="_blank" is required
+  // for iOS Safari to open WhatsApp reliably (same-frame navigation).
+  const whatsappHref = getWhatsAppLink(generateGeneralWhatsAppMessage())
+
   return (
     <section data-motion-section className="px-4 py-20 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-5xl rounded-3xl bg-[radial-gradient(circle_at_top,rgba(203,157,88,0.22),transparent_42%),#11100f] p-8 text-center text-white shadow-2xl sm:p-12">
@@ -361,12 +366,12 @@ function BottomCta() {
           <Link href="/contact-us" className="motion-button rounded-xl bg-white px-6 py-3 font-semibold text-foreground">
             Contact Us
           </Link>
-          <button
-            onClick={() => openWhatsApp(() => generateFloatingMessage('Enquiry'))}
+          <a
+            href={whatsappHref}
             className="motion-button rounded-xl bg-accent px-6 py-3 font-semibold text-white"
           >
             WhatsApp Order
-          </button>
+          </a>
         </div>
       </div>
     </section>
